@@ -46,11 +46,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-         realm.close();
+        realm.close();
     }
 
     private void addControl() {
-        userArrayList=new ArrayList<>();
+        userArrayList = new ArrayList<>();
         RecyclerView.LayoutManager eLayoutManager = new LinearLayoutManager(getApplicationContext());
         recyclerView.setLayoutManager(eLayoutManager);
         eAdapter = new AdapterListUser(userArrayList, mContext);
@@ -70,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
         call.enqueue(new Callback<List<User>>() {
             @Override
             public void onResponse(Call<List<User>> call, final Response<List<User>> response) {
-                if(response.body().size() != 0) {
+                if (response.body().size() != 0) {
                     userArrayList.addAll(response.body());
                     userArrayList.size();
                     eAdapter.notifyDataSetChanged();
@@ -78,31 +78,31 @@ public class MainActivity extends AppCompatActivity {
                     Realm.init(MainActivity.this);
 
                     realm = Realm.getDefaultInstance();
-                    realm.executeTransactionAsync(new Realm.Transaction() {
-                    @Override
-                    public void execute(Realm bgRealm) {
-                        for (int i = 0; i < response.body().size(); i++) {
-                            Users users = new Users();
-                            users.setLogin(response.body().get(i).getLogin());
-                            users.setAvatar_url(response.body().get(i).getAvatar_url());
-                            users.setUrl(response.body().get(i).getUrl());
-                            bgRealm.insertOrUpdate(users);
-                            Log.d("aaaa",""+bgRealm.where(Users.class).findAll());
-                            //bgRealm.insert(users);
+                    for (int i = 0; i < response.body().size(); i++) {
+                        final int id=response.body().get(i).getId();
+                        final String login=response.body().get(i).getLogin();
+                        final String avatar=response.body().get(i).getAvatar_url();
+                        final String url=response.body().get(i).getUrl();
+                        realm.executeTransactionAsync(new Realm.Transaction() {
+                            @Override
+                            public void execute(Realm bgRealm) {
 
-                        }
-
-
-
+                                Users users = new Users();
+                                users.setId(id);
+                                users.setLogin(login);
+                                users.setAvatar_url(avatar);
+                                users.setUrl(url);
+                                bgRealm.insert(users);
+                                bgRealm.commitTransaction();
+                            }
+                        }, new Realm.Transaction.OnSuccess() {
+                            @Override
+                            public void onSuccess() {
+                               
+                            }
+                        });
                     }
-                }, new Realm.Transaction.OnSuccess() {
-                    @Override
-                    public void onSuccess() {
-                        Toast.makeText(MainActivity.this, "Thành công", Toast.LENGTH_SHORT).show();
-                    }
-                });
-                }
-                else {
+                } else {
 
                 }
             }
